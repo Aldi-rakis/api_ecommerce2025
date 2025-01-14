@@ -111,11 +111,7 @@ class OrderController extends Controller
                     'external_id' => $order->external_id,
                     'invoice_url' => $order->invoice_url,
                     'invoice_id' => 'http://localhost:8000/api/checkoutt/' . $createInvoiceRequest['id'], 
-                    'order_items' => $order->orderItems->map(function ($orderItem) {
-                        return [
-                            'quantity' => $orderItem->quantity,
-                        ];
-                    })
+                    
                 ]
             ], 201);
         } else {
