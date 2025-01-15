@@ -105,6 +105,14 @@ class ProductController extends Controller
 {
     $product = Product::with('category', 'sizes')->findOrFail($id);
 
+    // Mengubah gambar JSON string menjadi array
+    $images = json_decode($product->images);
+
+    // Menambahkan URL gambar untuk setiap gambar
+    $product->images = array_map(function ($image) {
+        return asset('storage/' . $image);
+    }, $images);
+    
     // Gunakan transform untuk memilih field yang diinginkan di relasi sizes
     $product->sizes = $product->sizes->transform(function ($size) {
         return [
