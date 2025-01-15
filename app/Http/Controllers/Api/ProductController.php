@@ -110,9 +110,8 @@ class ProductController extends Controller
 
     // Menambahkan URL gambar untuk setiap gambar
     $product->images = array_map(function ($image) {
-        return asset('storage/' . $image);
+        return asset('storage/products/' . $image);
     }, $images);
-    
     // Gunakan transform untuk memilih field yang diinginkan di relasi sizes
     $product->sizes = $product->sizes->transform(function ($size) {
         return [
