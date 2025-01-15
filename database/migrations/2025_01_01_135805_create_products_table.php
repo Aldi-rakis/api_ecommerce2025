@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->text('description');
             $table->json('images');
-            $table->string('size');
-            $table->float('price');
+            $table->string('size')->nullable();
+            $table->float('price_flat')->nullable();
             $table->float('rating')->nullable();
             $table->unsignedBigInteger('category_id');
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');

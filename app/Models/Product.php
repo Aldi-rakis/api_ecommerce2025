@@ -8,7 +8,7 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'images', 'size', 'price', 'rating', 'category_id'];
+    protected $fillable = ['name', 'description', 'images', 'size', 'price_flat', 'rating', 'category_id'];
 
     protected $casts = [
         'images' => 'array',
@@ -28,5 +28,10 @@ class Product extends Model
     public function getImageAttribute($image)
     {
         return url('storage/products/' . $image);
+    }
+
+    public function sizes(){
+        return $this->hasMany(ProductSize::class);
+
     }
 }

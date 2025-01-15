@@ -12,7 +12,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('category')->get();
+        $products = Product::with(['sizes', 'category'])->get();
     
         return response()->json([
             'status' => true,
@@ -34,11 +34,13 @@ class ProductController extends Controller
                         'id' => $product->category->id,
                         'name' => $product->category->name,
                     ] : null,
-                    'created_at' => $product->created_at->format('Y-m-d H:i:s'),
-                    'updated_at' => $product->updated_at->format('Y-m-d H:i:s'),
+                    'sizes' => $product->sizes->map(fn($size) => [
+                        'size' => $size->size,
+                        'stock' => $size->stock,
+                    ]),
                 ];
             }),
-        ], 200);
+        ]);
     }
     
 
@@ -48,19 +50,24 @@ class ProductController extends Controller
             'name' => 'required|string',
             'description' => 'required|string',
             'images' => 'required|array',
-            'images.*' => 'file|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'size' => 'required|string',
-            'price' => 'required|numeric',
+            'images.*' => 'file|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'price_flat' => 'nullable|string',
+            'size' => 'nullable|string',
+            'size_stock' => 'required|array',
+            'size_stock.*.size' => 'required|string',
+            'size_stock.*.stock' => 'required|integer|min:0',
+            'size_stock.*.price' => 'required|numeric',
             'rating' => 'nullable|numeric',
             'category_id' => 'required|exists:categories,id',
         ]);
-    
-        // Proses unggah gambar
+        
+        // Simpan file gambar
         $imagePaths = [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $image->storeAs('products', $image->hashName() , 'public');
-                $imagePaths[] = $image->hashName();
+                $imageName = $image->hashName();
+                $image->storeAs('products', $imageName, 'public');
+                $imagePaths[] = $imageName;
             }
         }
     
@@ -68,29 +75,51 @@ class ProductController extends Controller
         $product = Product::create([
             'name' => $validated['name'],
             'description' => $validated['description'],
-            'images' => $imagePaths, // Simpan sebagai array
-            'size' => $validated['size'],
-            'price' => $validated['price'],
+            'images' => json_encode($imagePaths), // Menyimpan gambar dalam format JSON
+            'price_flat' => $validated['price_flat'] ?? null, // Jika tidak ada, set null
+            'size' => $validated['size'] ?? null, // Jika tidak ada, set null
             'rating' => $validated['rating'],
             'category_id' => $validated['category_id'],
         ]);
     
-        // Muat relasi kategori
-        // $product->load('category');
+        // Simpan ukuran dan stok
+        foreach ($validated['size_stock'] as $sizeStock) {
+            $product->sizes()->create([
+                'size' => $sizeStock['size'],
+                'stock' => $sizeStock['stock'],
+                'price' => $sizeStock['price'],
+            ]);
+        }
+
+        
     
         return response()->json([
             'message' => 'Product created successfully',
-            'product' => $product,
+            'product' => $product->load('sizes', 'category'),
         ], 201);
     }
     
     
 
     public function show($id)
-    {
-        $product = Product::with('category')->findOrFail($id);
-        return response()->json($product);
-    }
+{
+    $product = Product::with('category', 'sizes')->findOrFail($id);
+
+    // Gunakan transform untuk memilih field yang diinginkan di relasi sizes
+    $product->sizes = $product->sizes->transform(function ($size) {
+        return [
+            'size' => $size->size,
+            'price' => $size->price,
+            'stock' => $size->stock,
+        ];
+    });
+
+    // Sembunyikan kolom yang tidak diperlukan
+    $product->makeHidden(['created_at', 'updated_at']);
+
+    return response()->json($product);
+}
+
 
     public function update(Request $request, $id)
 {
