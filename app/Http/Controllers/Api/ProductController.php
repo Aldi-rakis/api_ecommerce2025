@@ -37,6 +37,7 @@ class ProductController extends Controller
                     'sizes' => $product->sizes->map(fn($size) => [
                         'size' => $size->size,
                         'stock' => $size->stock,
+                        'price' => $size->price,
                     ]),
                 ];
             }),
@@ -118,6 +119,7 @@ class ProductController extends Controller
             'size' => $size->size,
             'price' => $size->price,
             'stock' => $size->stock,
+
         ];
     });
 
