@@ -60,10 +60,10 @@ class CategoryController extends Controller
     //    
     public function update(Request $request, $id)
     {
-        // Temukan berita berdasarkan ID
+        // Temukan category berdasarkan ID
         $category = Category::find($id);
 
-        // Jika berita tidak ditemukan, kembalikan error
+        // Jika category tidak ditemukan, kembalikan error
         if (!$category) {
             return response()->json(['message' => 'Category not found'], 404);
         }
@@ -87,14 +87,14 @@ class CategoryController extends Controller
             $image = $request->file('image');
             $image->storeAs('public/categories', $image->hashName());
 
-            // Update berita dengan gambar baru
+            // Update category dengan gambar baru
             $category->update([
                 'image' => $image->hashName(),
                 'name' => $request->name,  // Perbaikan: gunakan $request->title
           
             ]);
         } else {
-            // Update berita tanpa gambar
+            // Update category tanpa gambar
             $category->update([
                 'name' => $request->name,  // Perbaikan: gunakan $request->title
              
@@ -122,7 +122,7 @@ class CategoryController extends Controller
         $category = Category::find($id);
 
         if (!$category) {
-            return response()->json(['message' => 'Berita tidak ditemukan'], 404);
+            return response()->json(['message' => 'category tidak ditemukan'], 404);
         }
 
         // Hapus gambar jika ada
@@ -132,7 +132,7 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        return response()->json(['message' => 'Berita berhasil dihapus']);
+        return response()->json(['message' => 'category berhasil dihapus']);
     }
     
 }

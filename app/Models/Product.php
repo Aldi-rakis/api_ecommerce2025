@@ -19,15 +19,11 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-     /**
-     * getImageAttribute
-     *
-     * @param  mixed $image
-     * @return void
-     */
-    public function getImageAttribute($image)
+    
+ 
+    public function getImageAttribute($images)
     {
-        return url('storage/products/' . $image);
+        return url('storage/products/' . $images);
     }
 
     public function sizes(){

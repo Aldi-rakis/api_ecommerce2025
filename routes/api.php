@@ -5,10 +5,19 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\Auth\RegisterController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+use App\Http\Controllers\Api\Auth\LoginController;
+
+
+
+
+Route::post('/register', [RegisterController::class, '__invoke'])->name('register');
+
+
+Route::post('/login', App\Http\Controllers\Api\Auth\LoginController::class)->name('login');
+
+
 
 
 
@@ -20,13 +29,16 @@ Route::post('categories/{id}', [CategoryController::class, 'update']);  // PUT: 
 Route::delete('categories/{id}', [CategoryController::class, 'destroy']); // DELETE: Hapus kategori berdasarkan ID
 
 
+
+
 // Produk Routes
-Route::get('products', [ProductController::class, 'index']);        // GET: Tampilkan semua produk
-Route::post('products', [ProductController::class, 'store']);       // POST: Tambah produk baru
+ Route::get('products', [ProductController::class, 'index']);        // GET: Tampilkan semua produk
+ Route::post('products', [ProductController::class, 'store']);       // POST: Tambah produk baru
 Route::get('products/{id}', [ProductController::class, 'show']);    // GET: Tampilkan produk berdasarkan ID
 Route::post('products/{id}', [ProductController::class, 'update']);  // PUT: Update produk berdasarkan ID
 Route::delete('products/{id}', [ProductController::class, 'destroy']); // DELETE: Hapus produk berdasarkan ID
 
+Route::get('/product/filter', [ProductController::class, 'filter']);
 
 
 
@@ -38,3 +50,10 @@ Route::put('orders/{id}', [OrderController::class, 'update']);     // PUT: Updat
 Route::delete('orders/{id}', [OrderController::class, 'destroy']); // DELETE: Hapus pesanan berdasarkan ID
 
 Route::post('/xendit/callback/{id}', [OrderController::class, 'notification'])->name('payment.callback');
+
+
+
+Route::middleware('auth:api')->get('/admin/products', [ProductController::class, 'index']);
+
+
+

@@ -199,4 +199,81 @@ public function update(Request $request, $id)
             'success' => true,
             'message' => 'Product deleted']);
     }
+
+
+    public function filter(Request $request)
+    {
+        // Validasi input
+        $validated = $request->validate([
+            'category_id' => 'nullable|exists:categories,id', // Validasi kategori
+            'min_price' => 'nullable|numeric|min:0', // Harga minimum
+            'max_price' => 'nullable|numeric|min:0', // Harga maksimum
+            'size' => 'nullable|string', // Ukuran
+        ]);
+    
+        // Query produk
+        $query = Product::query();
+    
+        // Filter berdasarkan kategori
+        if ($request->has('category_id')) {
+            $query->where('category_id', $validated['category_id']);
+        }
+    
+        // Filter berdasarkan harga
+        if ($request->has('min_price')) {
+            $query->whereHas('sizes', function ($q) use ($validated) {
+                $q->where('price', '>=', $validated['min_price']);
+            });
+        }
+    
+        if ($request->has('max_price')) {
+            $query->whereHas('sizes', function ($q) use ($validated) {
+                $q->where('price', '<=', $validated['max_price']);
+            });
+        }
+    
+        // Filter berdasarkan ukuran
+        if ($request->has('size')) {
+            $query->whereHas('sizes', function ($q) use ($validated) {
+                $q->where('size', $validated['size']);
+            });
+        }
+    
+        // Ambil hasil query dengan relasi
+        $product = $query->with(['sizes', 'category'])->get();
+    
+       
+        return response()->json([
+            'status' => true,
+            'message' => 'Product data retrieved successfully',
+            'products' => $product->map(function ($product) {
+                $images = is_string($product->images) ? json_decode($product->images, true) : $product->images;
+    
+                
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'description' => $product->description,
+                    'images' => collect($images)->map(function ($image) {
+                        return url('storage/products/' . $image);
+                    }),
+                    'size' => $product->size,
+                    'price' => $product->price,
+                    'rating' => $product->rating,
+                    'category' => $product->category ? [
+                        'id' => $product->category->id,
+                        'name' => $product->category->name,
+                    ] : null,
+                    'sizes' => $product->sizes->map(fn($size) => [
+                        'size' => $size->size,
+                        'stock' => $size->stock,
+                        'price' => $size->price,
+                    ]),
+                ];
+            }),
+        ]);
+    }
+    
+    
+
 }
