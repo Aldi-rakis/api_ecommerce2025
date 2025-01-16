@@ -129,50 +129,65 @@ class ProductController extends Controller
     return response()->json($product);
 }
 
-
-    public function update(Request $request, $id)
+public function update(Request $request, $id)
 {
     $validated = $request->validate([
         'name' => 'required|string',
         'description' => 'required|string',
-        'images' => 'required|array',
+        'images' => 'nullable|array',
         'images.*' => 'file|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'size' => 'required|string',
-        'price' => 'required|numeric',
+        'size_stock' => 'required|array',
+        'size_stock.*.size' => 'required|string',
+        'size_stock.*.stock' => 'required|integer|min:0',
+        'size_stock.*.price' => 'required|numeric',
         'rating' => 'nullable|numeric',
         'category_id' => 'required|exists:categories,id',
     ]);
 
-    $product = Product::findOrFail($id); // Ambil produk berdasarkan ID
+    $product = Product::with('sizes')->findOrFail($id); // Ambil produk beserta ukuran
 
-    // Hapus gambar lama jika ada
-    if ($product->images) {
-        foreach ($product->images as $image) {
-            Storage::disk('public')->delete('products/' . $image); // Hapus gambar lama dari storage
+    // Hapus gambar lama jika ada gambar baru diunggah
+    if ($request->hasFile('images')) {
+        foreach (json_decode($product->images, true) as $image) {
+            Storage::disk('public')->delete('products/' . $image);
         }
+
+        // Proses unggah gambar baru
+        $imagePaths = [];
+        foreach ($request->file('images') as $image) {
+            $imageName = $image->hashName();
+            $image->storeAs('products', $imageName, 'public');
+            $imagePaths[] = $imageName;
+        }
+    } else {
+        $imagePaths = json_decode($product->images, true); // Tetap gunakan gambar lama jika tidak ada gambar baru
     }
 
-    // Proses unggah gambar baru
-    $imagePaths = [];
-    foreach ($request->file('images') as $image) {
-        $imageName = $image->hashName();
-        $image->storeAs('products', $imageName, 'public');
-        $imagePaths[] = $imageName; // Simpan gambar yang baru
-    }
-
-    // Update produk dengan gambar baru
+    // Update data produk
     $product->update([
         'name' => $validated['name'],
         'description' => $validated['description'],
-        'images' => $imagePaths, // Simpan gambar sebagai array
-        'size' => $validated['size'],
-        'price' => $validated['price'],
+        'images' => json_encode($imagePaths), // Simpan gambar dalam format JSON
         'rating' => $validated['rating'],
         'category_id' => $validated['category_id'],
     ]);
 
-    return response()->json($product, 200); // Kembalikan produk yang diperbarui
+    // Update ukuran dan stok
+    $product->sizes()->delete(); // Hapus semua ukuran lama
+    foreach ($validated['size_stock'] as $sizeStock) {
+        $product->sizes()->create([
+            'size' => $sizeStock['size'],
+            'stock' => $sizeStock['stock'],
+            'price' => $sizeStock['price'],
+        ]);
+    }
+
+    return response()->json([
+        'message' => 'Product updated successfully',
+        'product' => $product->load('sizes', 'category'),
+    ], 200);
 }
+
 
  
 
