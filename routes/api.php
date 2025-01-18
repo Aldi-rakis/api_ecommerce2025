@@ -57,11 +57,15 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
 
     
     // Routes for products
+    Route::get('products', [ProductController::class, 'index']);        // GET: Tampilkan semua produk
+    Route::get('products/{id}', [ProductController::class, 'show']);    
     Route::post('products', [ProductController::class, 'store']);       // POST: Tambah produk baru
     Route::post('products/{id}', [ProductController::class, 'update']);  // PUT: Update produk berdasarkan ID
     Route::delete('products/{id}', [ProductController::class, 'destroy']);
 
     // Routes for categories
+    Route::get('categories', [CategoryController::class, 'index']);        // GET: Tampilkan semua kategori
+    Route::get('categories/{id}', [CategoryController::class, 'show']);    // GET: Tampilkan kategori berdasarkan ID
     Route::post('categories', [CategoryController::class, 'store']);       // POST: Tambah kategori baru
     Route::post('categories/{id}', [CategoryController::class, 'update']);  // PUT: Update kategori berdasarkan ID
     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);

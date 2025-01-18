@@ -16,4 +16,12 @@ class ProductSize extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function orderItems()
+{
+    return $this->belongsToMany(OrderItem::class, 'order_item_sizes')
+                ->withPivot('quantity')
+                ->withTimestamps();
+}
+
 }
