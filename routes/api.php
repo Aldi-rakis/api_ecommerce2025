@@ -47,13 +47,14 @@ Route::post('/xendit/callback/{id}', [OrderControllerUser::class, 'notification'
 
 // Route::middleware('auth:api')->get('/admin/products', [ProductControllerUser::class, 'index']);
 
+Route::post('/register', [RegisterController::class, '__invoke'])->name('admin.register');
+Route::post('/login', App\Http\Controllers\Api\Auth\LoginController::class)->name('admin.login');
 
 
 // Admin
 Route::prefix('admin')->middleware('auth:api')->group(function () {
   
-    Route::post('/register', [RegisterController::class, '__invoke'])->name('admin.register');
-    Route::post('/login', App\Http\Controllers\Api\Auth\LoginController::class)->name('admin.login');
+  
     Route::get('/dashboard', [DashboardControllerAdmin::class, 'dashboard']);             // GET: Semua pesanan
 
     
