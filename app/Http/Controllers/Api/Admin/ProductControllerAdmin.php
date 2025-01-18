@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
-class ProductController extends Controller
+class ProductControllerAdmin extends Controller
 {
     public function index()
     {
@@ -95,6 +95,7 @@ class ProductController extends Controller
         
     
         return response()->json([
+            'status' => true,
             'message' => 'Product created successfully',
             'product' => $product->load('sizes', 'category'),
         ], 201);
@@ -126,7 +127,11 @@ class ProductController extends Controller
     // Sembunyikan kolom yang tidak diperlukan
     $product->makeHidden(['created_at', 'updated_at']);
 
-    return response()->json($product);
+    return response()->json([
+        'success' => true,
+        'message' => 'Product retrieved successfully',
+        'product' => $product,
+    ]);
 }
 
 public function update(Request $request, $id)
@@ -183,6 +188,7 @@ public function update(Request $request, $id)
     }
 
     return response()->json([
+        'success' => true,
         'message' => 'Product updated successfully',
         'product' => $product->load('sizes', 'category'),
     ], 200);
@@ -197,7 +203,7 @@ public function update(Request $request, $id)
         $product->delete();
         return response()->json([
             'success' => true,
-            'message' => 'Product deleted']);
+            'message' => 'Product Success deleted']);
     }
 
 

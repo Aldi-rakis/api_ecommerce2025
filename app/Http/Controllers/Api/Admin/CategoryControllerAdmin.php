@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 
 
-class CategoryController extends Controller
+class CategoryControllerAdmin extends Controller
 {
     public function index()
     {
@@ -47,7 +47,10 @@ class CategoryController extends Controller
             'image' => $imageName, // Simpan nama file gambar atau null jika tidak ada gambar
         ]);
 
-        return response()->json(['message' => 'Category created successfully', 'data' => $category], 201);
+        return response()->json([
+            'status' => true,
+            'message' => 'Category created successfully', 
+            'data' => $category], 201);
     }
 
 
@@ -57,64 +60,54 @@ class CategoryController extends Controller
         return response()->json($category);
     }
 
-    //    
     public function update(Request $request, $id)
     {
-        // Temukan category berdasarkan ID
         $category = Category::find($id);
-
-        // Jika category tidak ditemukan, kembalikan error
         if (!$category) {
             return response()->json(['message' => 'Category not found'], 404);
         }
-
-        // Validasi data yang masuk
+    
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:categories,name,' . $category->id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-
-        // Cek jika ada file gambar yang diupload
+    
         if ($request->hasFile('image')) {
-            // Hapus gambar lama
-            Storage::disk('local')->delete('public/categories/' . basename($category->image));
-
+            // Hapus gambar lama jika ada
+            if ($category->image) {
+                Storage::disk('public')->delete('categories/' . basename($category->image));
+            }
+    
             // Upload gambar baru
             $image = $request->file('image');
-            $image->storeAs('public/categories', $image->hashName());
-
+            $imageName = $image->hashName();
+            $image->storeAs('categories', $imageName, 'public'); // Simpan di public disk
+    
             // Update category dengan gambar baru
             $category->update([
-                'image' => $image->hashName(),
-                'name' => $request->name,  // Perbaikan: gunakan $request->title
-          
+                'image' =>  $imageName, // Simpan path lengkap
+                'name' => $request->name,
             ]);
         } else {
-            // Update category tanpa gambar
             $category->update([
-                'name' => $request->name,  // Perbaikan: gunakan $request->title
-             
+                'name' => $request->name,
             ]);
         }
-
-        // Cek jika update berhasil dan kembalikan response
+    
         if ($category) {
-            return response()->json(
-                [
-                    'message' => 'Data Category berhasil diperbarui',
-                    'data' => $category
-                ]
-            );
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Category berhasil diperbarui',
+                'data' => $category
+            ]);
         }
-
-        // Kembalikan error jika update gagal
-        return response()->json(['message' => 'Failed to update news'], 500);
+    
+        return response()->json(['message' => 'Failed to update category'], 500);
     }
-
 
 
     public function destroy($id)
@@ -122,7 +115,9 @@ class CategoryController extends Controller
         $category = Category::find($id);
 
         if (!$category) {
-            return response()->json(['message' => 'category tidak ditemukan'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'category tidak ditemukan'], 404);
         }
 
         // Hapus gambar jika ada
@@ -132,7 +127,9 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        return response()->json(['message' => 'category berhasil dihapus']);
+        return response()->json([
+            'success' => true,
+            'message' => 'category berhasil dihapus']);
     }
     
 }

@@ -7,7 +7,7 @@ use App\Models\Category;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
-class DashboardController extends Controller
+class DashboardControllerAdmin extends Controller
 {
     public function dashboard()
     {
@@ -29,12 +29,13 @@ class DashboardController extends Controller
 
         // Response JSON
         return response()->json([
+            'status' => true,
             'message' => 'Dashboard data retrieved successfully',
             'data' => [
                 'total_products' => $totalProducts,
                 'total_categories' => $totalCategories,
-                'latest_orders' => $latestOrders,
                 'total_earnings' => $totalEarnings,
+                '5 latest_orders' => $latestOrders,
             ],
         ], 200);
     }

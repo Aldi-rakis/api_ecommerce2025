@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Users;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
-class OrderController extends Controller
+class OrderControllerUser extends Controller
 {
 
     protected $orderToken;
@@ -202,7 +202,10 @@ class OrderController extends Controller
             }),
         ];
 
-        return response()->json(['order' => $data], 200);
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail Order retrieved successfully',
+            'order' => $data], 200);
     }
 
 
@@ -212,7 +215,12 @@ class OrderController extends Controller
     public function allOrder()
     {
         $order = Order::get();
-        return response()->json($order);
+        return response()->json([
+            'success' => true,
+            'message' => 'Data Order retrieved successfully',
+            'data' => $order,
+            
+        ], 200);
     }
 
     private function createXenditInvoice($order)
