@@ -48,36 +48,53 @@ class ProductControllerUser extends Controller
     
 
     public function show($id)
-{
-    $product = Product::with('category', 'sizes')->findOrFail($id);
-
-    // Mengubah gambar JSON string menjadi array
-    $images = json_decode($product->images);
-
-    // Menambahkan URL gambar untuk setiap gambar
-    $product->images = array_map(function ($image) {
-        return asset('storage/products/' . $image);
-    }, $images);
-    // Gunakan transform untuk memilih field yang diinginkan di relasi sizes
-    $product->sizes = $product->sizes->transform(function ($size) {
-        return [
-            'size' => $size->size,
-            'price' => $size->price,
-            'stock' => $size->stock,
-
-        ];
-    });
-
-    // Sembunyikan kolom yang tidak diperlukan
-    $product->makeHidden(['created_at', 'updated_at']);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Detail Product retrieved successfully',
-        'data' => $product,
-    ]);
-}
-
+    {
+        // Ambil detail produk berdasarkan ID
+        $product = Product::with('category', 'sizes')->findOrFail($id);
+    
+        // Mengubah gambar JSON string menjadi array
+        $images = json_decode($product->images);
+    
+        // Menambahkan URL gambar untuk setiap gambar
+        $product->images = array_map(function ($image) {
+            return asset('storage/products/' . $image);
+        }, $images);
+    
+        // Gunakan transform untuk memilih field yang diinginkan di relasi sizes
+        $product->sizes = $product->sizes->transform(function ($size) {
+            return [
+                'size' => $size->size,
+                'price' => $size->price,
+                'stock' => $size->stock,
+            ];
+        });
+    
+        // Sembunyikan kolom yang tidak diperlukan
+        $product->makeHidden(['created_at', 'updated_at']);
+    
+        // Ambil rekomendasi 5 produk dengan rating tertinggi
+        $recommendedProducts = Product::where('id', '!=', $id) // Kecualikan produk saat ini
+            ->orderBy('rating', 'desc') // Urutkan berdasarkan rating tertinggi
+            ->take(5) // Ambil 5 produk
+            ->get(['id', 'name', 'rating', 'images']) // Pilih field yang diinginkan
+            ->map(function ($recommendedProduct) {
+                // Tambahkan URL gambar untuk setiap rekomendasi produk
+                $recommendedProduct->images = array_map(function ($image) {
+                    return asset('storage/products/' . $image);
+                }, json_decode($recommendedProduct->images));
+                return $recommendedProduct;
+            });
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail Product retrieved successfully',
+            'data' => [
+                'product' => $product,
+                'recommendations' => $recommendedProducts, // Tambahkan rekomendasi produk
+            ],
+        ]);
+    }
+    
  
 
 

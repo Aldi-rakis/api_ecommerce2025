@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Admin\OrderControllerUserAdmin;
 
 use App\Http\Controllers\Api\Users\ProductControllerUser;
 use App\Http\Controllers\Api\Users\OrderControllerUser;
+use App\Http\Controllers\Api\Users\ProductReviewController;
 
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\LoginController;
@@ -36,6 +37,10 @@ Route::get('products/{id}', [ProductControllerUser::class, 'show']);    // GET: 
 
 Route::get('/product/filter', [ProductControllerUser::class, 'filter']);
 
+// review/rating
+Route::post('/review', [ProductReviewController::class, 'addReview']); // Tambah review
+Route::get('/review/{productId}', [ProductReviewController::class, 'showReviews']); // Tampilkan review
+Route::get('/reviews/all', [ProductReviewController::class, 'getProductRatings']); // Tampilkan review
 
 
 // Order Routes
