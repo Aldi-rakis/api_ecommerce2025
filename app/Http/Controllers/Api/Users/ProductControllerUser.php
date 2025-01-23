@@ -26,14 +26,15 @@ class ProductControllerUser extends Controller
                     'description' => $product->description,
                     'images' => collect($images)->map(function ($image) {
                         return url('storage/products/' . $image);
-                    }),
-                    'size' => $product->size,
-                    'price' => $product->price,
+                    }),                
                     'rating' => $product->rating,
                     'category' => $product->category ? [
                         'id' => $product->category->id,
                         'name' => $product->category->name,
                     ] : null,
+                    'prices' => $product->sizes->count() > 1
+                        ? $product->sizes->pluck('price')->min().' - '.$product->sizes->pluck('price')->max()
+                        : $product->sizes->pluck('price')->first(),
                     'sizes' => $product->sizes->map(fn($size) => [
                         'size' => $size->size,
                         'stock' => $size->stock,
