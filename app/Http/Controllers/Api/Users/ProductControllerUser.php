@@ -172,6 +172,9 @@ class ProductControllerUser extends Controller
                         'id' => $product->category->id,
                         'name' => $product->category->name,
                     ] : null,
+                    'prices' => $product->sizes->count() > 1
+                        ? $product->sizes->pluck('price')->min().' - '.$product->sizes->pluck('price')->max()
+                        : $product->sizes->pluck('price')->first(),
                     'sizes' => $product->sizes->map(fn($size) => [
                         'size' => $size->size,
                         'stock' => $size->stock,
