@@ -73,7 +73,7 @@ class ProductControllerUser extends Controller
         $product->makeHidden(['created_at', 'updated_at']);
     
         // Ambil rekomendasi 5 produk dengan rating tertinggi
-        $recommendedProducts = Product::where('id', '!=', $id) // Kecualikan produk saat ini
+        $recommendedProducts = Product::with('sizes')->where('id', '!=', $id) // Kecualikan produk saat ini
             ->orderBy('rating', 'desc') // Urutkan berdasarkan rating tertinggi
             ->take(5) // Ambil 5 produk
             ->get(['id', 'name', 'rating', 'images']) // Pilih field yang diinginkan
@@ -82,6 +82,16 @@ class ProductControllerUser extends Controller
                 $recommendedProduct->images = array_map(function ($image) {
                     return asset('storage/products/' . $image);
                 }, json_decode($recommendedProduct->images));
+    
+                // ambil price dari rentang harga dari sizes dari pricenya
+                $recommendedProduct->prices = $recommendedProduct->sizes->count() > 1
+                    ? $recommendedProduct->sizes->pluck('price')->min().' - '. $recommendedProduct->sizes->pluck('price')->max()
+                    : $recommendedProduct->sizes->pluck('price')->first();
+              
+                // Sembunyikan kolom yang tidak diperlukan
+                $recommendedProduct->makeHidden(['created_at', 'updated_at']);
+             
+             
                 return $recommendedProduct;
             });
     
