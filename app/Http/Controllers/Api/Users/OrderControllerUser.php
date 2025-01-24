@@ -26,10 +26,13 @@ class OrderControllerUser extends Controller
     protected $orderToken;
 
     public function __construct()
+    
     {
-        Configuration::setXenditKey(env('XENDIT_SECRET_KEY')); // Mengambil API key dari file .env
 
-        // Mengambil token dari .env untuk validasi order
+        $XenditSecretKey = config('app.xendit_secret_key');
+        Configuration::setXenditKey($XenditSecretKey); // Mengambil API key dari file .env
+
+        // $OrderToken = config('app.order_token');
         $this->orderToken = env('ORDER_TOKEN');
     }
     public function createOrder(Request $request)
@@ -83,15 +86,17 @@ class OrderControllerUser extends Controller
 
         // Membuat external ID untuk invoice
         $externalId = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
+        $order_unique_number = 'ORD-' . date('Ymd') . '-' . rand(100000, 999999);
 
         // Membuat order
-        $order = Order::create([
+        $order = Order::create(attributes: [
             'customer_name' => $validated['customer_name'],
             'customer_email' => $validated['customer_email'],
             'customer_phone' => $validated['customer_phone'],
             'total_amount' => $totalAmount,
             'status' => 'pending',
             'external_id' => $externalId,
+            'order_unique_number' => $order_unique_number
         ]);
 
         // Menambahkan items ke dalam order dan mengurangi stok
@@ -153,6 +158,7 @@ class OrderControllerUser extends Controller
                         'external_id' => $order->external_id,
                         'invoice_url' => $order->invoice_url,
                         'invoice_id' => 'http://localhost:8000/api/checkoutt/' . $createInvoiceRequest['id'],
+                        'order_unique_number' => $order->order_unique_number
 
                     ]
                 ], 201);
@@ -169,44 +175,49 @@ class OrderControllerUser extends Controller
 
 
 
-    public function showOrder($id)
-    {
-        $order = Order::with('items')->find($id);
+    public function showOrder($identifier)
+{
+    // Cari order berdasarkan ID atau order_unique_number
+    $order = Order::with('items')
+        ->where('id', $identifier) // Cari berdasarkan ID
+        ->orWhere('order_unique_number', $identifier) // Cari berdasarkan order_unique_number
+        ->first();
 
-        if (!$order) {
-            return response()->json(['message' => 'Order not found'], 404);
-        }
-
-
-        $data = [
-            'customer_name' => $order->customer_name,
-            'customer_email' => $order->customer_email,
-            'customer_phone' => $order->customer_phone,
-            'total_amount' => $order->total_amount,
-            'status' => $order->status,
-            'items' => $order->items->map(function ($item) {
-                return [
-
-                    'product_name' => $item->product->name, // Pastikan relasi ke produk ada
-    
-                    'product_images' => array_map(function ($image) {
-                        return asset('storage/products/' . $image);
-                    }, json_decode($item->product->images, true)), // Pastikan ini array
-                    'sizes' => [
-                        [
-                            'size' => $item->size,
-                            'quantity' => $item->quantity,
-                        ]
-                    ],
-                ];
-            }),
-        ];
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Detail Order retrieved successfully',
-            'order' => $data], 200);
+    // Jika order tidak ditemukan
+    if (!$order) {
+        return response()->json(['message' => 'Order not found'], 404);
     }
+
+    // Format data untuk respons
+    $data = [
+        'customer_name' => $order->customer_name,
+        'customer_email' => $order->customer_email,
+        'customer_phone' => $order->customer_phone,
+        'total_amount' => $order->total_amount,
+        'status' => $order->status,
+        'items' => $order->items->map(function ($item) {
+            return [
+                'product_name' => $item->product->name, // Pastikan relasi ke produk ada
+                'product_images' => array_map(function ($image) {
+                    return asset('storage/products/' . $image);
+                }, json_decode($item->product->images, true)), // Pastikan ini array
+                'sizes' => [
+                    [
+                        'size' => $item->size,
+                        'quantity' => $item->quantity,
+                    ]
+                ],
+            ];
+        }),
+    ];
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Detail Order retrieved successfully',
+        'order' => $data,
+    ], 200);
+}
+
 
 
 

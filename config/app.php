@@ -15,6 +15,10 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'xendit_secret_key' => env('XENDIT_SECRET_KEY', 'aaaa'),
+
+     'order_token' => env('ORDER_TOKEN'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

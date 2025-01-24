@@ -15,11 +15,11 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Users\CategoryControllerUser;
 
+
+
+
 Route::post('/register', [RegisterController::class, '__invoke'])->name('register');
 Route::post('/register', [LoginController::class, '__invoke'])->name('login');
-
-
-
 
 
 
@@ -45,6 +45,8 @@ Route::get('/reviews/all', [ProductReviewController::class, 'getProductRatings']
 
 // Order Routes
 Route::post('orders', [OrderControllerUser::class, 'createOrder']);          // POST: Tambah pesanan baru
+Route::get('orders/show/{id}', [OrderControllerUser::class, 'showOrder']);          // POST: Tambah pesanan baru
+
 
 Route::post('/xendit/callback/{id}', [OrderControllerUser::class, 'notification'])->name('payment.callback');
 
